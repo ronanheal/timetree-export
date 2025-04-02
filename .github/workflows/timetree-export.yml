@@ -3,7 +3,7 @@ name: TimeTree Export
 on:
   push:
     branches:
-      - main  # Trigger on push to main branch
+      - main  # Trigger on push to the main branch
   workflow_dispatch:  # Allows you to manually trigger the workflow via GitHub UI
 
 jobs:
@@ -33,7 +33,7 @@ jobs:
           echo "TIMETREE_EMAIL=${{ secrets.TIMETREE_EMAIL }}" >> $GITHUB_ENV
           echo "TIMETREE_PASSWORD=${{ secrets.TIMETREE_PASSWORD }}" >> $GITHUB_ENV
 
-      # Step 5: Run the TimeTree export using __main__.py script in the timetree_exporter directory
+      # Step 5: Run the TimeTree export using the updated __main__.py script
       - name: Run TimeTree Export
         run: |
           python -m timetree_exporter  # Runs the __main__.py script
