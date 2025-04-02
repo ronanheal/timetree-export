@@ -124,7 +124,7 @@ def main():
         )
 
     # Upload the file to Dropbox
-    dropbox_path = '/Dropbox/TimeTree/calendar.ics'  # Dropbox path where the file will be uploaded
+    dropbox_path = '/TimeTree/calendar.ics'  # Dropbox path where the file will be uploaded
     upload_to_dropbox(args.output, dropbox_path)
 
 if __name__ == "__main__":
