@@ -1,0 +1,39 @@
+name: TimeTree Export
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to main branch
+  workflow_dispatch:  # Allows you to manually trigger the workflow via GitHub UI
+
+jobs:
+  run-export:
+    runs-on: ubuntu-latest  # This specifies the environment (Ubuntu)
+
+    steps:
+      # Step 1: Checkout the code from the repository
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Step 2: Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'  # Ensure Python 3 is used
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Step 4: Set up environment variables from GitHub secrets
+      - name: Set up environment variables
+        run: |
+          echo "TIMETREE_EMAIL=${{ secrets.TIMETREE_EMAIL }}" >> $GITHUB_ENV
+          echo "TIMETREE_PASSWORD=${{ secrets.TIMETREE_PASSWORD }}" >> $GITHUB_ENV
+
+      # Step 5: Run the TimeTree export script
+      - name: Run TimeTree Export
+        run: |
+          python __main__.py  # Replace with the correct entry point script
