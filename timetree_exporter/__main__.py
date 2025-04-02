@@ -1,15 +1,14 @@
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
 
-# Load the .env file
+# Load environment variables (this will pull from GitHub secrets instead of .env)
 load_dotenv()
 
-# Retrieve the credentials from environment variables
-email = os.getenv("TIMETREE_EMAIL")
-password = os.getenv("TIMETREE_PASSWORD")
+# Fetch the credentials
+timtree_email = os.getenv("TIMETREE_EMAIL")
+timtree_password = os.getenv("TIMETREE_PASSWORD")
 
-if not email or not password:
-    raise ValueError("TimeTree credentials are not set in environment variables.")
+# Now you can use timtree_email and timtree_password in your script
 
 """
 This module login in to TimeTree and converts Timetree events to iCal format.
