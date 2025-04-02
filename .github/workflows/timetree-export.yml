@@ -1,15 +1,14 @@
 name: TimeTree Exporter
 
 on:
+  # Run the workflow on push to the 'main' branch
+  push:
+    branches:
+      - main  # Change this if your default branch is named differently, e.g., 'master'
+
+  # Run the workflow on a schedule (every 6 hours or twice a day)
   schedule:
     - cron: "0 0,12 * * *"  # At midnight and noon UTC
-  # Optionally trigger on push or pull request (uncomment if needed)
-  # push:
-  #   branches:
-  #     - main  # or master depending on your branch name
-  # pull_request:
-  #   branches:
-  #     - main
 
 jobs:
   timetree_export:
