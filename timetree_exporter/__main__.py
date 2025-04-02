@@ -1,34 +1,15 @@
 import os
-
-def main():
-    # Get email and password from environment variables
-    email = os.getenv('TIMETREE_EMAIL')
-    password = os.getenv('TIMETREE_PASSWORD')
-
-    # If they are not set, raise an error
-    if not email or not password:
-        raise ValueError("Email and password must be provided through environment variables.")
-
-
-
-
-"""
-This module login in to TimeTree and converts Timetree events to iCal format.
-"""
-
 import argparse
 import logging
-import os
 from getpass import getpass
 from icalendar import Calendar
 from timetree_exporter import TimeTreeEvent, ICalEventFormatter, __version__
 from timetree_exporter.api.auth import login
 from timetree_exporter.api.calendar import TimeTreeCalendar
 
-
+# Setup loggers
 logger = logging.getLogger(__name__)
 package_logger = logging.getLogger(__package__)
-
 
 def get_events(email: str, password: str):
     """Get events from the Timetree API."""
@@ -43,21 +24,11 @@ def get_events(email: str, password: str):
 
     if len(metadatas) == 0:
         logger.error("No active calendars found")
-        raise ValueError
+        raise ValueError("No active calendars found.")
 
-    # Print out the list of calendars for the user to choose from
-    for i, metadata in enumerate(metadatas):
-        print(f"{i+1}. {metadata['name'] if metadata['name'] else 'Unnamed'}")
-
-    # Ask the user to choose a calendar
-    calendar_num = (
-        input("Which Calendar do you want to export? (Default to 1): ") or "1"
-    )
-    if not calendar_num.isdigit() or not 1 <= int(calendar_num) <= len(metadatas):
-        raise ValueError(
-            f"Invalid Calendar Number. Must be a number between 1 and {len(metadatas)}"
-        )
-    idx = int(calendar_num) - 1
+    # Select the first calendar (defaulting to 1)
+    calendar_num = 1
+    idx = calendar_num - 1  # Adjust for zero-based index
 
     # Get events from the selected calendar
     calendar_id = metadatas[idx]["id"]
@@ -65,9 +36,15 @@ def get_events(email: str, password: str):
 
     return calendar.get_events(calendar_id, calendar_name)
 
-
 def main():
     """Main function for the Timetree Exporter."""
+    # Get email and password from environment variables (or fallback to args)
+    email = os.getenv('TIMETREE_EMAIL')
+    password = os.getenv('TIMETREE_PASSWORD')
+
+    if not email or not password:
+        raise ValueError("Email and password must be provided through environment variables.")
+
     # Parse arguments
     parser = argparse.ArgumentParser(
         description="Convert Timetree events to iCal format",
@@ -87,29 +64,17 @@ def main():
         action="store_true",
     )
     parser.add_argument(
-        "-e",
-        "--email",
-        type=str,
-        help="Email address",
-        default=None,
-    )
-    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
     )
     args = parser.parse_args()
 
-    if args.email is None:
-        email = input("Enter your email address: ")
-    else:
-        email = args.email
-    password = getpass("Enter your password: ")
-
     # Set logging level
     if args.verbose:
         package_logger.setLevel(logging.DEBUG)
 
+    # Initialize iCalendar object
     cal = Calendar()
     events = get_events(email, password)
 
@@ -131,12 +96,11 @@ def main():
     )
 
     # Write calendar to file
-    with open(args.output, "wb") as f:  # Path Traversal Vulnerability if on a server
+    with open(args.output, "wb") as f:
         f.write(cal.to_ical())
         logger.info(
             "The .ics calendar file is saved to %s", os.path.abspath(args.output)
         )
-
 
 if __name__ == "__main__":
     main()
