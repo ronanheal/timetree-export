@@ -1,6 +1,7 @@
 import os
 import argparse
 import logging
+import dropbox
 from getpass import getpass
 from icalendar import Calendar
 from timetree_exporter import TimeTreeEvent, ICalEventFormatter, __version__
@@ -35,6 +36,26 @@ def get_events(email: str, password: str):
     calendar_name = metadatas[idx]["name"]
 
     return calendar.get_events(calendar_id, calendar_name)
+
+def upload_to_dropbox(file_path: str, dropbox_path: str):
+    """Upload the generated iCal file to Dropbox."""
+    # Get Dropbox API token from environment variable
+    dbx_token = os.getenv('DROPBOX_TOKEN')
+    if not dbx_token:
+        raise ValueError("Dropbox API token is missing")
+
+    # Connect to Dropbox
+    dbx = dropbox.Dropbox(dbx_token)
+
+    # Open the file to upload
+    with open(file_path, "rb") as f:
+        # Upload file
+        try:
+            dbx.files_upload(f.read(), dropbox_path, mode=dropbox.files.WriteMode.overwrite)
+            logger.info(f"File uploaded successfully to Dropbox: {dropbox_path}")
+        except dropbox.exceptions.ApiError as e:
+            logger.error(f"Failed to upload to Dropbox: {e}")
+            raise
 
 def main():
     """Main function for the Timetree Exporter."""
@@ -101,6 +122,10 @@ def main():
         logger.info(
             "The .ics calendar file is saved to %s", os.path.abspath(args.output)
         )
+
+    # Upload the file to Dropbox
+    dropbox_path = '/Dropbox/TimeTree/calendar.ics'  # Dropbox path where the file will be uploaded
+    upload_to_dropbox(args.output, dropbox_path)
 
 if __name__ == "__main__":
     main()
