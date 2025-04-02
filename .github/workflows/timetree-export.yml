@@ -8,7 +8,7 @@ on:
 
 jobs:
   run-export:
-    runs-on: ubuntu-latest  # This specifies the environment (Ubuntu)
+    runs-on: ubuntu-latest  # Specifies the environment (Ubuntu)
 
     steps:
       # Step 1: Checkout the code from the repository
@@ -33,7 +33,7 @@ jobs:
           echo "TIMETREE_EMAIL=${{ secrets.TIMETREE_EMAIL }}" >> $GITHUB_ENV
           echo "TIMETREE_PASSWORD=${{ secrets.TIMETREE_PASSWORD }}" >> $GITHUB_ENV
 
-      # Step 5: Run the TimeTree export script
+      # Step 5: Run the TimeTree export using __main__.py script in the timetree_exporter directory
       - name: Run TimeTree Export
         run: |
-          python __main__.py  # Replace with the correct entry point script
+          python -m timetree_exporter  # Runs the __main__.py script
