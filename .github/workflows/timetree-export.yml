@@ -1,41 +1,33 @@
 name: TimeTree Exporter
 
 on:
-  # Run the workflow on push to the 'main' branch
   push:
     branches:
-      - main  # Change this if your default branch is named differently, e.g., 'master'
-
-  # Run the workflow on a schedule (every 6 hours or twice a day)
-  schedule:
-    - cron: "0 0,12 * * *"  # At midnight and noon UTC
+      - main
+  workflow_dispatch:
 
 jobs:
-  timetree_export:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Check out the repository code
-      - name: Check out repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      # Step 2: Set up Python
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.8'  # Specify the Python version (e.g., 3.8 or 3.9)
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
 
-      # Step 3: Install dependencies
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r timetree-exporter/requirements.txt
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-      # Step 4: Run the script
-      - name: Run TimeTree Exporter
-        env:
-          TIMETREE_EMAIL: ${{ secrets.TIMETREE_EMAIL }}
-          TIMETREE_PASSWORD: ${{ secrets.TIMETREE_PASSWORD }}
-          DROPBOX_TOKEN: ${{ secrets.DROPBOX_TOKEN }}
-        run: |
-          python -m timetree_exporter
+    - name: Run TimeTree Exporter
+      env:
+        TIMETREE_EMAIL: ${{ secrets.TIMETREE_EMAIL }}
+        TIMETREE_PASSWORD: ${{ secrets.TIMETREE_PASSWORD }}
+        DROPBOX_TOKEN: ${{ secrets.DROPBOX_TOKEN }}
+      run: |
+        python -m timetree_exporter
