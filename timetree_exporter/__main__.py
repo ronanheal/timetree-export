@@ -12,24 +12,26 @@ from timetree_exporter.api.calendar import TimeTreeCalendar
 logger = logging.getLogger(__name__)
 package_logger = logging.getLogger(__package__)
 
+# Dropbox API credentials and token URLs
+DROPBOX_CLIENT_ID = os.getenv('DROPBOX_CLIENT_ID')
+DROPBOX_CLIENT_SECRET = os.getenv('DROPBOX_CLIENT_SECRET')
+DROPBOX_REFRESH_TOKEN = os.getenv('DROPBOX_REFRESH_TOKEN')
+
+TOKEN_URL = "https://api.dropbox.com/oauth2/token"
+
 def get_access_token():
     """Get Dropbox access token using refresh token"""
-    dbx_refresh_token = os.getenv('DROPBOX_REFRESH_TOKEN')
-    dbx_client_id = os.getenv('DROPBOX_CLIENT_ID')
-    dbx_client_secret = os.getenv('DROPBOX_CLIENT_SECRET')
-    
-    if not dbx_refresh_token:
+    if not DROPBOX_REFRESH_TOKEN:
         raise ValueError("Dropbox refresh token is missing")
 
-    url = "https://api.dropbox.com/oauth2/token"
     data = {
         "grant_type": "refresh_token",
-        "refresh_token": dbx_refresh_token,
-        "client_id": dbx_client_id,
-        "client_secret": dbx_client_secret,
+        "refresh_token": DROPBOX_REFRESH_TOKEN,
+        "client_id": DROPBOX_CLIENT_ID,
+        "client_secret": DROPBOX_CLIENT_SECRET,
     }
 
-    response = requests.post(url, data=data)
+    response = requests.post(TOKEN_URL, data=data)
     
     if response.status_code == 200:
         return response.json()['access_token']
