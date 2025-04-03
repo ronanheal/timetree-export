@@ -1,37 +1,35 @@
-name: TimeTree Exporter
+name: Timetree Exporter
 
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-  schedule:
-    - cron: "0 0,12 * * *"  # Runs at midnight and noon UTC
 
 jobs:
-  build:
+  export-calendar:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
 
-    - name: Run TimeTree Exporter
-      env:
-        TIMETREE_EMAIL: ${{ secrets.TIMETREE_EMAIL }}
-        TIMETREE_PASSWORD: ${{ secrets.TIMETREE_PASSWORD }}
-        DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}
-        DROPBOX_CLIENT_SECRET: ${{ secrets.DROPBOX_CLIENT_SECRET }}
-        DROPBOX_REFRESH_TOKEN: ${{ secrets.DROPBOX_REFRESH_TOKEN }}
-      run: |
-        python -m timetree_exporter
+      - name: Set environment variables
+        run: |
+          echo "DROPBOX_CLIENT_ID=${{ secrets.DROPBOX_CLIENT_ID }}" >> $GITHUB_ENV
+          echo "DROPBOX_CLIENT_SECRET=${{ secrets.DROPBOX_CLIENT_SECRET }}" >> $GITHUB_ENV
+          echo "DROPBOX_REFRESH_TOKEN=${{ secrets.DROPBOX_REFRESH_TOKEN }}" >> $GITHUB_ENV
+          echo "TIMETREE_EMAIL=${{ secrets.TIMETREE_EMAIL }}" >> $GITHUB_ENV
+          echo "TIMETREE_PASSWORD=${{ secrets.TIMETREE_PASSWORD }}" >> $GITHUB_ENV
+
+      - name: Run the Timetree Exporter
+        run: |
+          python -m timetree_exporter
