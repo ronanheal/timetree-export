@@ -12,29 +12,29 @@ from timetree_exporter.api.calendar import TimeTreeCalendar
 logger = logging.getLogger(__name__)
 package_logger = logging.getLogger(__package__)
 
-# Dropbox API token URL
-TOKEN_URL = "https://api.dropbox.com/oauth2/token"
-
 def get_access_token():
-    """Retrieve a new access token using the refresh token."""
-    app_key = os.getenv("DROPBOX_APP_KEY")
-    app_secret = os.getenv("DROPBOX_APP_SECRET")
-    refresh_token = os.getenv("DROPBOX_REFRESH_TOKEN")
-
-    if not app_key or not app_secret or not refresh_token:
-        raise ValueError("Dropbox API credentials are missing.")
-
-    response = requests.post(
-        TOKEN_URL,
-        data={"grant_type": "refresh_token", "refresh_token": refresh_token},
-        auth=(app_key, app_secret),
-    )
-    response_data = response.json()
+    """Get Dropbox access token using refresh token"""
+    dbx_refresh_token = os.getenv('DROPBOX_REFRESH_TOKEN')
+    dbx_client_id = os.getenv('DROPBOX_CLIENT_ID')
+    dbx_client_secret = os.getenv('DROPBOX_CLIENT_SECRET')
     
-    if "access_token" not in response_data:
-        raise ValueError(f"Failed to retrieve access token: {response_data}")
+    if not dbx_refresh_token:
+        raise ValueError("Dropbox refresh token is missing")
 
-    return response_data["access_token"]
+    url = "https://api.dropbox.com/oauth2/token"
+    data = {
+        "grant_type": "refresh_token",
+        "refresh_token": dbx_refresh_token,
+        "client_id": dbx_client_id,
+        "client_secret": dbx_client_secret,
+    }
+
+    response = requests.post(url, data=data)
+    
+    if response.status_code == 200:
+        return response.json()['access_token']
+    else:
+        raise ValueError(f"Failed to retrieve access token: {response.json()}")
 
 def get_events(email: str, password: str):
     """Get events from the Timetree API."""
@@ -43,7 +43,9 @@ def get_events(email: str, password: str):
     metadatas = calendar.get_metadata()
 
     # Filter out deactivated calendars
-    metadatas = [metadata for metadata in metadatas if metadata["deactivated_at"] is None]
+    metadatas = [
+        metadata for metadata in metadatas if metadata["deactivated_at"] is None
+    ]
 
     if len(metadatas) == 0:
         logger.error("No active calendars found")
@@ -62,9 +64,13 @@ def get_events(email: str, password: str):
 def upload_to_dropbox(file_path: str, dropbox_path: str):
     """Upload the generated iCal file to Dropbox."""
     access_token = get_access_token()
+
+    # Connect to Dropbox
     dbx = dropbox.Dropbox(access_token)
 
+    # Open the file to upload
     with open(file_path, "rb") as f:
+        # Upload file
         try:
             dbx.files_upload(f.read(), dropbox_path, mode=dropbox.files.WriteMode.overwrite)
             logger.info(f"File uploaded successfully to Dropbox: {dropbox_path}")
@@ -74,9 +80,9 @@ def upload_to_dropbox(file_path: str, dropbox_path: str):
 
 def main():
     """Main function for the Timetree Exporter."""
-    # Get email and password from environment variables
-    email = os.getenv("TIMETREE_EMAIL")
-    password = os.getenv("TIMETREE_PASSWORD")
+    # Get email and password from environment variables (or fallback to args)
+    email = os.getenv('TIMETREE_EMAIL')
+    password = os.getenv('TIMETREE_PASSWORD')
 
     if not email or not password:
         raise ValueError("Email and password must be provided through environment variables.")
@@ -134,10 +140,12 @@ def main():
     # Write calendar to file
     with open(args.output, "wb") as f:
         f.write(cal.to_ical())
-        logger.info("The .ics calendar file is saved to %s", os.path.abspath(args.output))
+        logger.info(
+            "The .ics calendar file is saved to %s", os.path.abspath(args.output)
+        )
 
     # Upload the file to Dropbox
-    dropbox_path = "/TimeTree/calendar.ics"  # Dropbox path where the file will be uploaded
+    dropbox_path = '/TimeTree/calendar.ics'  # Dropbox path where the file will be uploaded
     upload_to_dropbox(args.output, dropbox_path)
 
 if __name__ == "__main__":
