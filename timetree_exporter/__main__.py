@@ -20,7 +20,7 @@ DROPBOX_REFRESH_TOKEN = os.getenv('DROPBOX_REFRESH_TOKEN')
 TOKEN_URL = "https://api.dropbox.com/oauth2/token"
 
 def get_access_token():
-    """Get Dropbox access token using refresh token"""
+    """Get Dropbox access token using refresh token, or refresh if necessary."""
     if not DROPBOX_REFRESH_TOKEN:
         raise ValueError("Dropbox refresh token is missing")
 
@@ -31,12 +31,17 @@ def get_access_token():
         "client_secret": DROPBOX_CLIENT_SECRET,
     }
 
+    # Attempt to get the access token
     response = requests.post(TOKEN_URL, data=data)
-    
+
     if response.status_code == 200:
-        return response.json()['access_token']
+        access_token = response.json()['access_token']
+        logger.info("Access token retrieved successfully")
+        return access_token
     else:
-        raise ValueError(f"Failed to retrieve access token: {response.json()}")
+        # If token retrieval fails, log the error and attempt a refresh
+        logger.error(f"Failed to retrieve access token: {response.json()}")
+        raise ValueError("Failed to retrieve access token. Refresh token might be expired or malformed.")
 
 def get_events(email: str, password: str):
     """Get events from the Timetree API."""
@@ -65,7 +70,11 @@ def get_events(email: str, password: str):
 
 def upload_to_dropbox(file_path: str, dropbox_path: str):
     """Upload the generated iCal file to Dropbox."""
-    access_token = get_access_token()
+    try:
+        access_token = get_access_token()  # Ensure we always have a valid access token
+    except ValueError as e:
+        logger.error(f"Error obtaining Dropbox access token: {e}")
+        return
 
     # Connect to Dropbox
     dbx = dropbox.Dropbox(access_token)
